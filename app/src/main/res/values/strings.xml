@@ -6,8 +6,7 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
-    <string name="introduce_content">\t\t\t\t本APP是专为方便大学生查找课程表而开发应用。打开APP，自动弹出当日课表，1秒速查。本地处理，隐私无忧。\n\t\t\t\t限权明细：存储限权。存储内容为用户选择的照片。\n\t\t\t\t使用说明：导入周1——5的课表（图片），导入提示栏即完成\n\t\t\t\t开发者：厦门大学嘉庚学院\t\t洪煜程</string>
+    <string name="accessibility_service_description">用于监控短视频沉迷服务</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="saved_successfully">保存成功</string>

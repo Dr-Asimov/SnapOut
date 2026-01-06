@@ -16,7 +16,7 @@ public class MyMonitorService extends AccessibilityService {
     private Runnable forceExitRunnable;//指挥官
     private String currentPackageName="";//即用户正在浏览的APP的包名
 
-    private final List<String> BLACKLIST= Arrays.asList("com.ss.android.u");//样例黑名单，后面要改
+    private final List<String> BLACKLIST= Arrays.asList("tv.danmaku.bili");//样例黑名单，后面要改
     private final long TIME_LIMIT=5000;
     @Override
     public void onServiceConnected()
