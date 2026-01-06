@@ -1,0 +1,55 @@
+//plugins {
+//    id 'com.android.application'
+//}
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.example.classnotify"   // 新版 AGP 推荐加上
+    compileSdkVersion 33            // >= 33 就行，建议用最新稳定版
+    //buildToolsVersion "30.0.2"
+
+    defaultConfig {
+        applicationId 'com.example.ambition'
+        minSdkVersion 26
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+
+    // 新版 lintOptions 已被弃用，用 lint 代替
+    lint {
+        abortOnError false
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    // --- AndroidX 基础 ---
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.8.0'
+
+    // --- Navigation（安全稳定版）---
+    implementation 'androidx.navigation:navigation-fragment:2.5.3'
+    implementation 'androidx.navigation:navigation-ui:2.5.3'
+
+    // --- ActivityResult 支持 ---
+    implementation 'androidx.activity:activity:1.7.2'
+    implementation 'androidx.fragment:fragment:1.5.7'
+
+    // --- Glide 图片加载 ---
+    implementation 'com.github.bumptech.glide:glide:4.13.2'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.13.2'
+}

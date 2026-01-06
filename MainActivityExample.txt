@@ -1,0 +1,132 @@
+package com.example.myapp;
+
+import android.os.Bundle;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    private int currentWeekday = 1; // 1~7
+    private TextView bottomText;
+    private ViewPager2 dayViewPager;
+    private int previousPosition = 0;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        bottomText = findViewById(R.id.bottomText);
+        dayViewPager = findViewById(R.id.dayViewPager);
+
+        updateWeekdayText();
+
+        // 设置 ViewPager2 Adapter
+        dayViewPager.setAdapter(new DayPagerAdapter());
+
+        // 监听左右滑动
+        dayViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+
+                if (position > previousPosition) {
+                    swipeRight();
+                } else if (position < previousPosition) {
+                    swipeLeft();
+                }
+
+                previousPosition = position;
+            }
+        });
+    }
+
+    private void updateWeekdayText() {
+        bottomText.setText("今日星期" + currentWeekday);
+    }
+
+    private void swipeLeft() {
+        currentWeekday--;
+        if (currentWeekday < 1) currentWeekday = 7;
+        updateWeekdayText();
+    }
+
+    private void swipeRight() {
+        currentWeekday++;
+        if (currentWeekday > 7) currentWeekday = 1;
+        updateWeekdayText();
+    }
+
+    // ------------------------
+    // ViewPager2 Adapter
+    // ------------------------
+    class DayPagerAdapter extends RecyclerView.Adapter<DayPagerAdapter.DayViewHolder> {
+
+        private final int pageCount = 100; // 假设可以滑动100天
+
+        @NonNull
+        @Override
+        public DayViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            RecyclerView recyclerView = new RecyclerView(parent.getContext());
+            recyclerView.setLayoutParams(new RecyclerView.LayoutParams(
+                    RecyclerView.LayoutParams.MATCH_PARENT,
+                    RecyclerView.LayoutParams.MATCH_PARENT
+            ));
+            recyclerView.setLayoutManager(new LinearLayoutManager(parent.getContext()));
+            return new DayViewHolder(recyclerView);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull DayViewHolder holder, int position) {
+            RecyclerView recyclerView = holder.recyclerView;
+
+            // 每天显示示例行程
+            List<String> items = new ArrayList<>();
+            for (int i = 1; i <= 20; i++) {
+                items.add("第" + i + "个行程");
+            }
+
+            recyclerView.setAdapter(new RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+                @NonNull
+                @Override
+                public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                    TextView tv = new TextView(parent.getContext());
+                    tv.setPadding(20, 20, 20, 20);
+                    tv.setTextColor(0xFFFFFFFF);
+                    return new RecyclerView.ViewHolder(tv) {};
+                }
+
+                @Override
+                public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int pos) {
+                    TextView tv = (TextView) holder.itemView;
+                    tv.setText(items.get(pos));
+                }
+
+                @Override
+                public int getItemCount() {
+                    return items.size();
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return pageCount;
+        }
+
+        class DayViewHolder extends RecyclerView.ViewHolder {
+            RecyclerView recyclerView;
+
+            public DayViewHolder(@NonNull RecyclerView itemView) {
+                super(itemView);
+                recyclerView = (RecyclerView) itemView;
+            }
+        }
+    }
+}
