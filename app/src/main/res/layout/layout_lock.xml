@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FB000000">
+    <LinearLayout
+        android:id="@+id/layout_interaction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:padding="30dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="你准备完成什么工作？"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:layout_gravity="center"/>
+        <EditText
+            android:id="@+id/et_work_goal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="#FFFFFF"
+            android:hint="在此输入..."
+            android:padding="10dp" />
+        <Button
+            android:id="@+id/btn_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="确认目标，开始冷静"/>
+
+
+
+
+    </LinearLayout>
+
+</RelativeLayout>
