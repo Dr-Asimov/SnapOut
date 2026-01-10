@@ -30,6 +30,9 @@ public class MyMonitorService extends AccessibilityService {
     private View lockView;
     private WindowManager windowManager;
     private WindowManager.LayoutParams params;
+    private boolean isInPunishmentMode=false;//是否处于“严厉监视”状态
+    private Runnable liftPunishmentRunnable;// 解除监视的任务
+
 
     private final List<String> BLACKLIST= Arrays.asList("tv.danmaku.bili", "com.cahx.honor");//样例黑名单，后面要改
 //    private final int MINUTES = 15;
@@ -83,9 +86,19 @@ public class MyMonitorService extends AccessibilityService {
                 //检查是否在黑名单中
                 if(BLACKLIST.contains(currentPackageName))
                 {
-                    Log.d("Monitor","命中黑名单，开始倒计时...");
-                    //开始倒计时
-                    handler.postDelayed(forceExitRunnable,TIME_LIMIT);
+                    if(isInPunishmentMode)
+                    {
+                        Log.d("Monitor", "监视期内违规！强制退出");
+                        Toast.makeText(this,"请关注您的任务",Toast.LENGTH_LONG).show();
+                        performGlobalAction(GLOBAL_ACTION_HOME);
+                    }else
+                    {
+                        Log.d("Monitor","命中黑名单，开始倒计时...");
+                        //开始倒计时
+                        handler.removeCallbacks(forceExitRunnable);
+                        handler.postDelayed(forceExitRunnable,TIME_LIMIT);
+                    }
+
                 }
             }
 
@@ -132,14 +145,25 @@ public class MyMonitorService extends AccessibilityService {
 
                 if(lockView!=null&&windowManager!=null)
                 {
+                    //移除输入框
                     windowManager.removeView(lockView);
                     lockView=null;
                 }
 
-                performGlobalAction(GLOBAL_ACTION_HOME);
+                isInPunishmentMode=true;
+                Log.d("Monitor","进入1分钟自控监视间，目标："+goal);
+
+
+                performGlobalAction(GLOBAL_ACTION_HOME);//模拟Home键：返回主界面
 
                 Log.d("Monitor","用户目标已经锁定："+goal);
 
+                if(liftPunishmentRunnable !=null) handler.removeCallbacks(liftPunishmentRunnable);
+                liftPunishmentRunnable=()->{
+                    isInPunishmentMode=false;
+                    Log.d("Monitor","1分钟监控结束");
+                };
+                handler.postDelayed(liftPunishmentRunnable,60*1000);
             }
             else
             {
