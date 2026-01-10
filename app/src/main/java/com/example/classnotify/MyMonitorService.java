@@ -31,7 +31,9 @@ public class MyMonitorService extends AccessibilityService {
     private WindowManager windowManager;
     private WindowManager.LayoutParams params;
 
-    private final List<String> BLACKLIST= Arrays.asList("tv.danmaku.bili");//样例黑名单，后面要改
+    private final List<String> BLACKLIST= Arrays.asList("tv.danmaku.bili", "com.cahx.honor");//样例黑名单，后面要改
+//    private final int MINUTES = 15;
+//    private final long TIME_LIMIT = MINUTES * 60 * 1000L;
     private final long TIME_LIMIT=5000;
     @Override
     public void onServiceConnected()
@@ -81,8 +83,8 @@ public class MyMonitorService extends AccessibilityService {
                 //检查是否在黑名单中
                 if(BLACKLIST.contains(currentPackageName))
                 {
-                    Log.d("Monitor","命中黑名单，开始5秒倒计时...");
-                    //开始5秒倒计时
+                    Log.d("Monitor","命中黑名单，开始倒计时...");
+                    //开始倒计时
                     handler.postDelayed(forceExitRunnable,TIME_LIMIT);
                 }
             }
