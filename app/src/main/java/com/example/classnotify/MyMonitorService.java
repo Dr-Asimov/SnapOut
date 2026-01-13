@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.os.Handler;
@@ -25,14 +26,19 @@ import java.util.logging.LogRecord;
 
 public class MyMonitorService extends AccessibilityService {
     private Handler handler=new Handler(Looper.getMainLooper());
-    private Runnable forceExitRunnable;//指挥官
+    private Runnable forceExitRunnable;//打包的任务：强制退出
     private String currentPackageName="";//即用户正在浏览的APP的包名
     private View lockView;
     private WindowManager windowManager;
     private WindowManager.LayoutParams params;
     private boolean isInPunishmentMode=false;//是否处于“严厉监视”状态
     private Runnable liftPunishmentRunnable;// 解除监视的任务
-
+    private static final int STAGE_SETTING = 0;   // 场景1：初次进入设定
+    private static final int STAGE_PUNISHMENT = 1; // 场景2：游玩结束惩罚
+    private int currentStage = STAGE_SETTING;
+    private View timeSelectorView;
+    private boolean isSessionActive=false;//标记：当前是否处于“已经批准”时间
+    private boolean isUiShowing=false;
 
     private final List<String> BLACKLIST= Arrays.asList("tv.danmaku.bili", "com.cahx.honor");//样例黑名单，后面要改
 //    private final int MINUTES = 15;
@@ -44,7 +50,7 @@ public class MyMonitorService extends AccessibilityService {
         super.onServiceConnected();
         Log.d("Monitor","服务已连接");
 
-        //定义超时后动作
+        //定义任务：强制退出
         forceExitRunnable=new Runnable() {
             @Override
             public void run() {
@@ -68,8 +74,9 @@ public class MyMonitorService extends AccessibilityService {
         {
             String newPackageName=event.getPackageName().toString();
 
-            if(newPackageName.equals("com.android.systemui")||
-            newPackageName.contains("inputmethod")){
+            if(newPackageName.equals(getPackageName())||
+                    newPackageName.equals("com.android.systemui")||
+                    newPackageName.contains("inputmethod")){
                 return;
             }
 
@@ -79,8 +86,21 @@ public class MyMonitorService extends AccessibilityService {
             {
                 //用户切屏了
                 handler.removeCallbacks(forceExitRunnable);
-                currentPackageName=newPackageName;
 
+                if(isSessionActive&&!BLACKLIST.contains(newPackageName))
+                {
+                    isSessionActive=false;
+                    Log.d("Monitor","切出目标应用，计时结束");
+                }
+
+                if(timeSelectorView!=null&&windowManager!=null)
+                {
+                    windowManager.removeView(timeSelectorView);
+                    timeSelectorView=null;
+                    isUiShowing=false;
+                }
+
+                currentPackageName=newPackageName;
                 Log.d("Monitor","检测到当前应用："+currentPackageName);
 
                 //检查是否在黑名单中
@@ -93,10 +113,21 @@ public class MyMonitorService extends AccessibilityService {
                         performGlobalAction(GLOBAL_ACTION_HOME);
                     }else
                     {
-                        Log.d("Monitor","命中黑名单，开始倒计时...");
-                        //开始倒计时
-                        handler.removeCallbacks(forceExitRunnable);
-                        handler.postDelayed(forceExitRunnable,TIME_LIMIT);
+                        //isSessionActive存在的意义是什么
+                        if(isSessionActive)
+                        {
+                            Log.d("Monitor","用户正在合法游戏时间内，无需操作");
+                        }else
+                        {
+                            Log.d("Monitor","命中黑名单，弹出时间选择器...");
+                            showTimeSelector();
+                        }
+
+//                        //开始倒计时
+//                        handler.removeCallbacks(forceExitRunnable);
+//                        //在这里设定倒计时时间，然后开始delay
+//
+//                        handler.postDelayed(forceExitRunnable,TIME_LIMIT);
                     }
 
                 }
@@ -105,6 +136,62 @@ public class MyMonitorService extends AccessibilityService {
         }
     }
 
+    private void showTimeSelector()
+    {
+        //如果已经在显示中，直接拦截，不做重复执行逻辑
+        if(isUiShowing||timeSelectorView!=null) return;//防止重复弹窗
+
+        isUiShowing=true;//同时可以理解为：上锁，不允许再弹框
+        windowManager=(WindowManager) getSystemService(WINDOW_SERVICE);
+
+        WindowManager.LayoutParams selectorParams=new WindowManager.LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT);
+
+        timeSelectorView=LayoutInflater.from(this).inflate(R.layout.layout_time_selector,null);
+
+        NumberPicker npPlayTime=timeSelectorView.findViewById(R.id.np_play_time);
+        npPlayTime.setMinValue(1);
+        npPlayTime.setMaxValue(60);
+        npPlayTime.setValue(15);
+
+        Button btnConfirm=timeSelectorView.findViewById(R.id.btn_confirm_time);
+        btnConfirm.setOnClickListener(v->{
+            int minutes=npPlayTime.getValue();
+            long durationMillis=minutes*60*1000L;
+
+            if(timeSelectorView!=null && windowManager != null)
+            {
+                windowManager.removeView(timeSelectorView);
+                timeSelectorView=null;
+            }
+
+            isUiShowing=false;
+            isSessionActive=true;
+            Log.d("Monitor","用户设定时间："+minutes+"分钟");
+            Toast.makeText(this,"开始计时："+minutes+"分钟后将强制休息",Toast.LENGTH_SHORT).show();
+
+            handler.removeCallbacks(forceExitRunnable);
+            handler.postDelayed(()->{
+                isSessionActive=false;
+                forceExitRunnable.run();
+            },durationMillis);
+        });
+        Log.d("Monitor", "isUiShowing 状态: " + isUiShowing);
+        Log.d("Monitor", "timeSelectorView 是否为空: " + (timeSelectorView == null));
+        try{
+            windowManager.addView(timeSelectorView,selectorParams);
+            Log.d("Monitor","addView成功调用");
+        }catch (Exception e)
+        {
+            isUiShowing=false;
+            Log.e("Monitor","addView抛出异常："+e.getMessage());
+        }
+
+    }
     @Override
     public void onInterrupt()
     {
@@ -115,6 +202,8 @@ public class MyMonitorService extends AccessibilityService {
             windowManager.removeView(lockView);
             lockView=null;
         }
+        isUiShowing=false;
+        isSessionActive=false;
     }
 
     private void startCombineLock(){
@@ -127,7 +216,7 @@ public class MyMonitorService extends AccessibilityService {
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                LayoutParams.FLAG_LAYOUT_IN_SCREEN| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT);
 
         lockView= LayoutInflater.from(this).inflate(R.layout.layout_lock,null);
@@ -135,9 +224,12 @@ public class MyMonitorService extends AccessibilityService {
         //UI引用
         View layoutInteraction=lockView.findViewById(R.id.layout_interaction);
         EditText etGoal=lockView.findViewById(R.id.et_work_goal);
-        Button btnConfirm=lockView.findViewById(R.id.btn_confirm);
+        Button btnExit=lockView.findViewById(R.id.btn_exit);
 
-        btnConfirm.setOnClickListener(v -> {
+
+
+
+        btnExit.setOnClickListener(v -> {
             String goal=etGoal.getText().toString().trim();
             if(!goal.isEmpty())
             {
