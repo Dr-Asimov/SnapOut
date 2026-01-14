@@ -1,8 +1,11 @@
 package com.example.classnotify;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -44,11 +47,48 @@ public class MyMonitorService extends AccessibilityService {
 //    private final int MINUTES = 15;
 //    private final long TIME_LIMIT = MINUTES * 60 * 1000L;
     private final long TIME_LIMIT=5000;
+
+    @Override
+    public int onStartCommand(android.content.Intent intent,int flags,int startId)
+    {
+        return START_STICKY;
+    }
+
     @Override
     public void onServiceConnected()
     {
         super.onServiceConnected();
         Log.d("Monitor","服务已连接");
+
+        String channelId="class_ambition_channel";
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O)
+        {
+            android.app.NotificationChannel channel=new android.app.NotificationChannel(
+                    channelId,
+                    "防沉迷",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            android.app.NotificationManager manager=getSystemService(android.app.NotificationManager.class);
+            if(manager != null)
+            {
+                manager.createNotificationChannel(channel);
+            }
+        }
+        android.app.Notification notification=null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            notification=new Notification.Builder(this,channelId)
+                    .setContentTitle("自律助手监督中")
+                    .setContentText("正在为您监督")
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setOngoing(true)
+                    .build();
+        }
+        if(notification!=null)
+        {
+            startForeground(101,notification);
+            Log.d("Monitor","已经进入前台服务");
+        }
+
 
         //定义任务：强制退出
         forceExitRunnable=new Runnable() {
@@ -161,8 +201,8 @@ public class MyMonitorService extends AccessibilityService {
         Button btnConfirm=timeSelectorView.findViewById(R.id.btn_confirm_time);
         btnConfirm.setOnClickListener(v->{
             int minutes=npPlayTime.getValue();
-            long durationMillis=minutes*60*1000L;
-
+            //long durationMillis=minutes*60*1000L;
+            long durationMillis=5000L;//测试:用的5秒
             if(timeSelectorView!=null && windowManager != null)
             {
                 windowManager.removeView(timeSelectorView);
