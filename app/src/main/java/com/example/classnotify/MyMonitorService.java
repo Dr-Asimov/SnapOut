@@ -48,11 +48,6 @@ public class MyMonitorService extends AccessibilityService {
 //    private final long TIME_LIMIT = MINUTES * 60 * 1000L;
     private final long TIME_LIMIT=5000;
 
-    @Override
-    public int onStartCommand(android.content.Intent intent,int flags,int startId)
-    {
-        return START_STICKY;
-    }
 
     @Override
     public void onServiceConnected()
@@ -194,15 +189,26 @@ public class MyMonitorService extends AccessibilityService {
         timeSelectorView=LayoutInflater.from(this).inflate(R.layout.layout_time_selector,null);
 
         NumberPicker npPlayTime=timeSelectorView.findViewById(R.id.np_play_time);
-        npPlayTime.setMinValue(1);
+        npPlayTime.setMinValue(0);
         npPlayTime.setMaxValue(60);
-        npPlayTime.setValue(15);
+        npPlayTime.setValue(0);
 
         Button btnConfirm=timeSelectorView.findViewById(R.id.btn_confirm_time);
         btnConfirm.setOnClickListener(v->{
             int minutes=npPlayTime.getValue();
-            //long durationMillis=minutes*60*1000L;
-            long durationMillis=5000L;//测试:用的5秒
+            long durationMillis;
+
+            if(minutes==0)
+            {
+                durationMillis=3000L;
+                Log.d("Monitor","检测到设定为0分钟，进入开发模式：3秒");
+                Toast.makeText(this, "测试模式：3秒后将强制休息", Toast.LENGTH_SHORT).show();
+            }else {
+                durationMillis=minutes*60*1000L;
+                Toast.makeText(this, "已设定游玩时间：" + minutes + "分钟", Toast.LENGTH_SHORT).show();
+            }
+
+            //long durationMillis=5000L;//测试:用的5秒
             if(timeSelectorView!=null && windowManager != null)
             {
                 windowManager.removeView(timeSelectorView);
