@@ -8,4 +8,10 @@
     android:background="#9E7B03"
     tools:context=".MainActivity">
 
+    <Button
+        android:id="@+id/btn_open_blacklist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设置黑名单" />
+
 </LinearLayout>

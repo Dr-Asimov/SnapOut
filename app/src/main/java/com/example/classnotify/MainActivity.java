@@ -7,17 +7,25 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
+    Button btnOpen;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Button btnOpen=findViewById(R.id.btn_open_blacklist);
+        btnOpen.setOnClickListener(u->{
+            Intent intent=new Intent(MainActivity.this,BlacklistActivity.class);
+            startActivity(intent);
+        });
 
         //检查服务是否开启，未开启则跳转设置页
         if(!isAccessibilitySettingsOn())

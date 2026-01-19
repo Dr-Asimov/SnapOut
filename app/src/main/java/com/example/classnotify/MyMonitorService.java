@@ -3,6 +3,7 @@ package com.example.classnotify;
 import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Build;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.os.Handler;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import android.view.WindowManager;
 // 必须精准导入 WindowManager 下的 LayoutParams
@@ -25,6 +27,7 @@ import android.view.WindowManager.LayoutParams;
 
 import org.w3c.dom.Text;
 
+import java.util.Set;
 import java.util.logging.LogRecord;
 
 public class MyMonitorService extends AccessibilityService {
@@ -42,9 +45,9 @@ public class MyMonitorService extends AccessibilityService {
     private View timeSelectorView;
     private boolean isSessionActive=false;//标记：当前是否处于“已经批准”时间
     private boolean isUiShowing=false;
-
-    private final List<String> BLACKLIST= Arrays.asList("tv.danmaku.bili", "com.cahx.honor");//样例黑名单，后面要改
-//    private final int MINUTES = 15;
+    // 删掉之前的 List<String> BLACKLIST = ...
+    private Set<String> dynamicBlacklist = new HashSet<>();
+    //    private final int MINUTES = 15;
 //    private final long TIME_LIMIT = MINUTES * 60 * 1000L;
     private final long TIME_LIMIT=5000;
 
@@ -89,7 +92,7 @@ public class MyMonitorService extends AccessibilityService {
         forceExitRunnable=new Runnable() {
             @Override
             public void run() {
-                if(BLACKLIST.contains(currentPackageName)){
+                if(dynamicBlacklist.contains(currentPackageName)){
                     Toast.makeText(getApplicationContext(),"使用时间超限，强制休息!",Toast.LENGTH_LONG).show();
                     //核心动作：模拟点击Home键，实现“强制退出”视觉效果
                     //performGlobalAction(GLOBAL_ACTION_HOME);
@@ -105,6 +108,12 @@ public class MyMonitorService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event)
     {
+
+        SharedPreferences prefs=getSharedPreferences("MonitorPrefs",MODE_PRIVATE);
+        Set<String> savedSet=prefs.getStringSet("blacklist_pkgs",new HashSet<>());
+
+        dynamicBlacklist.clear();
+        dynamicBlacklist.addAll(savedSet);
         if(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
         {
             String newPackageName=event.getPackageName().toString();
@@ -122,7 +131,7 @@ public class MyMonitorService extends AccessibilityService {
                 //用户切屏了
                 handler.removeCallbacks(forceExitRunnable);
 
-                if(isSessionActive&&!BLACKLIST.contains(newPackageName))
+                if(isSessionActive&&!dynamicBlacklist.contains(newPackageName))
                 {
                     isSessionActive=false;
                     Log.d("Monitor","切出目标应用，计时结束");
@@ -139,7 +148,7 @@ public class MyMonitorService extends AccessibilityService {
                 Log.d("Monitor","检测到当前应用："+currentPackageName);
 
                 //检查是否在黑名单中
-                if(BLACKLIST.contains(currentPackageName))
+                if(dynamicBlacklist.contains(currentPackageName))
                 {
                     if(isInPunishmentMode)
                     {

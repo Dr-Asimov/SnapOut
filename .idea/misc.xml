@@ -3,6 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/activity_blacklist.xml" value="0.4466666666666667" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/item_app.xml" value="0.19457013574660634" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/layout_lock.xml" value="0.23385416666666667" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/layout_time_selector.xml" value="0.2328125" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/xml/accessibility_service_config.xml" value="0.22760416666666666" />
