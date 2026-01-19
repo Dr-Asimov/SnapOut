@@ -5,23 +5,29 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
-public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder>{
-    private List<AppInfo> mData;
+public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder> implements Filterable {
+    private List<AppInfo> applist;
+    private List<AppInfo> appListFull;
     private Set<String> mBlacklist;
 
     public AppAdapter(List<AppInfo> data,Set<String> blacklist)
     {
-        this.mData=data;
+        this.applist=data;
+        this.appListFull=new ArrayList<>(applist);
         this.mBlacklist=blacklist;
     }
 
@@ -36,7 +42,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder>{
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder,int position)
     {
-        AppInfo app=mData.get(position);
+        AppInfo app=applist.get(position);
         holder.tvName.setText(app.appName);
         holder.ivIcon.setImageDrawable(app.icon);
 
@@ -87,7 +93,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder>{
     @Override
     public int getItemCount()
     {
-        return mData!=null?mData.size():0;
+        return applist!=null?applist.size():0;
     }
 
 
@@ -106,6 +112,43 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder>{
         }
     }
 
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                List<AppInfo> filteredList = new ArrayList<>();
+                FilterResults results = new FilterResults();
 
+                if (constraint == null || constraint.length() == 0) {
+                    //此时搜索框是空的
+                    filteredList.addAll(appListFull);
+                } else {
+                    //获得用户的输入信息（大小写、空格误触优化）
+                    String filterPattern = constraint.toString().toLowerCase().trim();
+
+                    for (AppInfo item : appListFull) {
+                        if (item.appName.toLowerCase().contains(filterPattern) ||
+                                item.packageName.toLowerCase().contains(filterPattern)) {
+                            filteredList.add(item);
+                        }
+                    }
+                }
+                    results.values = filteredList;
+                    results.count = filteredList.size();
+                    return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+
+                if (results.values != null) {
+                    applist.clear();
+                    applist.addAll((List) results.values);
+                    notifyDataSetChanged();
+                }
+            }
+        };
+    }
 
 }

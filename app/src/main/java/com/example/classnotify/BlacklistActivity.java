@@ -4,6 +4,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import androidx.appcompat.widget.SearchView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +19,7 @@ public class BlacklistActivity extends AppCompatActivity {
     private AppAdapter adapter;
     private List<AppInfo> appList=new ArrayList<>();
     private Set<String> currentBlacklist;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -43,6 +45,24 @@ public class BlacklistActivity extends AppCompatActivity {
         {
             currentBlacklist.addAll(savedSet);
         }
+
+        searchView=findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                if(adapter!=null)
+                {
+                    adapter.getFilter().filter(newText);
+                }
+                return true;
+            }
+        });
 
         new Thread(()->{
             List<AppInfo> data=getInstalledApps();
