@@ -109,74 +109,67 @@ public class MyMonitorService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event)
     {
 
-        SharedPreferences prefs=getSharedPreferences("MonitorPrefs",MODE_PRIVATE);
-        Set<String> savedSet=prefs.getStringSet("blacklist_pkgs",new HashSet<>());
+        if(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            SharedPreferences prefs = getSharedPreferences("MonitorPrefs", MODE_PRIVATE);
+            Set<String> savedSet = prefs.getStringSet("blacklist_pkgs", new HashSet<>());
 
-        dynamicBlacklist.clear();
-        dynamicBlacklist.addAll(savedSet);
-        if(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED)
-        {
-            String newPackageName=event.getPackageName().toString();
+            dynamicBlacklist.clear();
+            dynamicBlacklist.addAll(savedSet);
+            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                String newPackageName = event.getPackageName().toString();
 
-            if(newPackageName.equals(getPackageName())||
-                    newPackageName.equals("com.android.systemui")||
-                    newPackageName.contains("inputmethod")){
-                return;
-            }
-
-
-            //如果切换APP，先移除之前的计时器
-            if(!newPackageName.equals(currentPackageName))
-            {
-                //用户切屏了
-                handler.removeCallbacks(forceExitRunnable);
-
-                if(isSessionActive&&!dynamicBlacklist.contains(newPackageName))
-                {
-                    isSessionActive=false;
-                    Log.d("Monitor","切出目标应用，计时结束");
+                if (newPackageName.equals(getPackageName()) ||
+                        newPackageName.equals("com.android.systemui") ||
+                        newPackageName.contains("inputmethod")) {
+                    return;
                 }
 
-                if(timeSelectorView!=null&&windowManager!=null)
-                {
-                    windowManager.removeView(timeSelectorView);
-                    timeSelectorView=null;
-                    isUiShowing=false;
-                }
 
-                currentPackageName=newPackageName;
-                Log.d("Monitor","检测到当前应用："+currentPackageName);
+                //如果切换APP，先移除之前的计时器
+                if (!newPackageName.equals(currentPackageName)) {
+                    //用户切屏了
+                    handler.removeCallbacks(forceExitRunnable);
 
-                //检查是否在黑名单中
-                if(dynamicBlacklist.contains(currentPackageName))
-                {
-                    if(isInPunishmentMode)
-                    {
-                        Log.d("Monitor", "监视期内违规！强制退出");
-                        Toast.makeText(this,"请关注您的任务",Toast.LENGTH_LONG).show();
-                        performGlobalAction(GLOBAL_ACTION_HOME);
-                    }else
-                    {
-                        //isSessionActive存在的意义是什么
-                        if(isSessionActive)
-                        {
-                            Log.d("Monitor","用户正在合法游戏时间内，无需操作");
-                        }else
-                        {
-                            Log.d("Monitor","命中黑名单，弹出时间选择器...");
-                            showTimeSelector();
-                        }
+                    if (isSessionActive && !dynamicBlacklist.contains(newPackageName)) {
+                        isSessionActive = false;
+                        Log.d("Monitor", "切出目标应用，计时结束");
+                    }
+
+                    if (timeSelectorView != null && windowManager != null) {
+                        windowManager.removeView(timeSelectorView);
+                        timeSelectorView = null;
+                        isUiShowing = false;
+                    }
+
+                    currentPackageName = newPackageName;
+                    Log.d("Monitor", "检测到当前应用：" + currentPackageName);
+
+                    //检查是否在黑名单中
+                    if (dynamicBlacklist.contains(currentPackageName)) {
+                        if (isInPunishmentMode) {
+                            Log.d("Monitor", "监视期内违规！强制退出");
+                            Toast.makeText(this, "请关注您的任务", Toast.LENGTH_LONG).show();
+                            performGlobalAction(GLOBAL_ACTION_HOME);
+                        } else {
+                            //isSessionActive存在的意义是什么
+                            if (isSessionActive) {
+                                Log.d("Monitor", "用户正在合法游戏时间内，无需操作");
+                            } else {
+                                Log.d("Monitor", "命中黑名单，弹出时间选择器...");
+                                showTimeSelector();
+                            }
 
 //                        //开始倒计时
 //                        handler.removeCallbacks(forceExitRunnable);
 //                        //在这里设定倒计时时间，然后开始delay
 //
 //                        handler.postDelayed(forceExitRunnable,TIME_LIMIT);
+                        }
+
                     }
-
                 }
-            }
 
+            }
         }
     }
 
