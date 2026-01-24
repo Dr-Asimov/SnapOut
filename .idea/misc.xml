@@ -3,11 +3,17 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.135" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/activity_blacklist.xml" value="0.4466666666666667" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/fragment_first.xml" value="0.24375" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/fragment_second.xml" value="0.24375" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/item_app.xml" value="0.19457013574660634" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/layout_lock.xml" value="0.23385416666666667" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/layout/layout_time_selector.xml" value="0.2328125" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/menu/menu_main.xml" value="0.24375" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1" />
+        <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/mipmap-anydpi-v26/point.xml" value="0.124" />
         <entry key="..\:/MyProject/Android/Ambition/app/src/main/res/xml/accessibility_service_config.xml" value="0.22760416666666666" />
         <entry key="..\:/MyProject/Android/Basic/app/src/main/res/layout/activity_introduce.xml" value="0.21195652173913043" />
         <entry key="..\:/MyProject/Android/Basic/app/src/main/res/layout/activity_main.xml" value="0.21195652173913043" />

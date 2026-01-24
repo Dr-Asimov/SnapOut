@@ -2,6 +2,7 @@ package com.example.classnotify;
 
 import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -24,6 +25,8 @@ import java.util.List;
 import android.view.WindowManager;
 // 必须精准导入 WindowManager 下的 LayoutParams
 import android.view.WindowManager.LayoutParams;
+
+import androidx.core.app.NotificationCompat;
 
 import org.w3c.dom.Text;
 
@@ -75,7 +78,7 @@ public class MyMonitorService extends AccessibilityService {
         android.app.Notification notification=null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             notification=new Notification.Builder(this,channelId)
-                    .setContentTitle("自律助手监督中")
+                    .setContentTitle("自律检察官监督中")
                     .setContentText("正在为您监督")
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setOngoing(true)
@@ -94,6 +97,8 @@ public class MyMonitorService extends AccessibilityService {
             public void run() {
                 if(dynamicBlacklist.contains(currentPackageName)){
                     Toast.makeText(getApplicationContext(),"使用时间超限，强制休息!",Toast.LENGTH_LONG).show();
+                    //发送休息时间通知
+                    sendRestTimeNotification();
                     //核心动作：模拟点击Home键，实现“强制退出”视觉效果
                     //performGlobalAction(GLOBAL_ACTION_HOME);
                     //进阶
@@ -149,6 +154,8 @@ public class MyMonitorService extends AccessibilityService {
                         if (isInPunishmentMode) {
                             Log.d("Monitor", "监视期内违规！强制退出");
                             Toast.makeText(this, "请关注您的任务", Toast.LENGTH_LONG).show();
+                            //发送休息时间通知
+                            sendRestTimeNotification();
                             performGlobalAction(GLOBAL_ACTION_HOME);
                         } else {
                             //isSessionActive存在的意义是什么
@@ -253,6 +260,39 @@ public class MyMonitorService extends AccessibilityService {
         isUiShowing=false;
         isSessionActive=false;
     }
+
+    private void sendRestTimeNotification()
+    {
+        String channelId="rest_time_channel_v1";
+        NotificationManager manager=(NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        if(manager==null)return;
+
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O)
+        {
+            NotificationChannel channel=new NotificationChannel(
+                    channelId,
+                    "休息时间提醒",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("用于提醒用户休息和完成任务");
+            channel.enableLights(true);
+            channel.enableVibration(true);
+            manager.createNotificationChannel(channel);
+        }
+        NotificationCompat.Builder builder=new NotificationCompat.Builder(this,channelId)
+                .setContentTitle("休息时间提醒")
+                .setContentText("咕咕咕！请完成你的任务！")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .setAutoCancel(true)
+                .setDefaults(NotificationCompat.DEFAULT_ALL);
+
+        manager.notify(102,builder.build());
+
+    }
+
 
     private void startCombineLock(){
         if(lockView!=null) return;
