@@ -273,11 +273,11 @@ public class MyMonitorService extends AccessibilityService {
             NotificationChannel channel=new NotificationChannel(
                     channelId,
                     "休息时间提醒",
-                    NotificationManager.IMPORTANCE_HIGH
+                    NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("用于提醒用户休息和完成任务");
             channel.enableLights(true);
-            channel.enableVibration(true);
+            channel.enableVibration(false);
             manager.createNotificationChannel(channel);
         }
         NotificationCompat.Builder builder=new NotificationCompat.Builder(this,channelId)
@@ -286,8 +286,7 @@ public class MyMonitorService extends AccessibilityService {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
-                .setAutoCancel(true)
-                .setDefaults(NotificationCompat.DEFAULT_ALL);
+                .setAutoCancel(true);
 
         manager.notify(102,builder.build());
 

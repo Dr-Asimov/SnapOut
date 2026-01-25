@@ -40,6 +40,12 @@
         </activity>
         <activity android:name=".BlacklistActivity"
             android:exported="false" />
+        <activity
+            android:name=".TeachActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:label="产品手册" />
+
         <service
             android:name=".MyMonitorService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"

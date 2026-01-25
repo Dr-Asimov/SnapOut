@@ -106,12 +106,17 @@ public class BlacklistActivity extends AppCompatActivity {
         for(int i=0;i<total;i++)
         {
             PackageInfo p=packs.get(i);
-            AppInfo newInfo=new AppInfo();
-            newInfo.appName = p.applicationInfo.loadLabel(pm).toString();
-            newInfo.packageName = p.packageName;
-            newInfo.icon = p.applicationInfo.loadIcon(pm);
-            res.add(newInfo);
 
+            // 【核心逻辑】：判断是否为系统应用
+            // 如果 (flags & FLAG_SYSTEM) != 0，说明它是系统应用
+            boolean isSystemApp = (p.applicationInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0;
+            if (!isSystemApp) {
+                AppInfo newInfo = new AppInfo();
+                newInfo.appName = p.applicationInfo.loadLabel(pm).toString();
+                newInfo.packageName = p.packageName;
+                newInfo.icon = p.applicationInfo.loadIcon(pm);
+                res.add(newInfo);
+            }
             if(listener!=null)
             {
                 int progress=(int) (((float) (i + 1) / total) * 100);
