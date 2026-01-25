@@ -3,7 +3,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.FileUtils;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+
 import androidx.appcompat.widget.SearchView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,12 +24,16 @@ public class BlacklistActivity extends AppCompatActivity {
     private List<AppInfo> appList=new ArrayList<>();
     private Set<String> currentBlacklist;
     private SearchView searchView;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blacklist);
+
+        progressBar=findViewById(R.id.progress_loader);
+
         // 1. 获取 RecyclerView 实例
         RecyclerView recyclerView=findViewById(R.id.rv_blacklist);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -64,35 +72,58 @@ public class BlacklistActivity extends AppCompatActivity {
             }
         });
 
+
+        loadAppData(recyclerView);
+    }
+
+    private void loadAppData(RecyclerView recyclerView)
+    {
+        progressBar.setVisibility(View.VISIBLE);
+        progressBar.setProgress(0);
+
         new Thread(()->{
-            List<AppInfo> data=getInstalledApps();
+            List<AppInfo> data=getInstalledApps(progress -> {
+                runOnUiThread(()->progressBar.setProgress(progress));
+            });
+
             runOnUiThread(()->{
                 appList=data;
                 adapter=new AppAdapter(appList,currentBlacklist);
                 recyclerView.setAdapter(adapter);
+                progressBar.setVisibility(View.GONE);
             });
-        }).start();
 
+        }).start();
     }
 
-
-    public List<AppInfo> getInstalledApps()
+    public List<AppInfo> getInstalledApps(ProgressListener listener)
     {
         List<AppInfo> res=new ArrayList<>();
         PackageManager pm=getPackageManager();
-
-
         List<PackageInfo> packs=pm.getInstalledPackages(0);
-        for(PackageInfo p:packs)
+        int total=packs.size();
+
+        for(int i=0;i<total;i++)
         {
+            PackageInfo p=packs.get(i);
             AppInfo newInfo=new AppInfo();
-            newInfo.appName=p.applicationInfo.loadLabel(pm).toString();
-            newInfo.packageName=p.packageName;
-            newInfo.icon=p.applicationInfo.loadIcon(pm);
+            newInfo.appName = p.applicationInfo.loadLabel(pm).toString();
+            newInfo.packageName = p.packageName;
+            newInfo.icon = p.applicationInfo.loadIcon(pm);
             res.add(newInfo);
+
+            if(listener!=null)
+            {
+                int progress=(int) (((float) (i + 1) / total) * 100);
+                listener.onProgressUpdate(progress);
+            }
         }
-        Log.d("AppScan", "系统返回的包总数: " + packs.size());
+        //Log.d("AppScan", "系统返回的包总数: " + packs.size());
         return res;
+    }
+
+    public interface ProgressListener{
+        void onProgressUpdate(int progress);
     }
 
 }
