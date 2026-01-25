@@ -297,6 +297,7 @@ public class MyMonitorService extends AccessibilityService {
     private void startCombineLock(){
         if(lockView!=null) return;
 
+        performGlobalAction(GLOBAL_ACTION_HOME);
         windowManager=(WindowManager) getSystemService(WINDOW_SERVICE);
 
         //初始参数：必须获得焦点以支持输入
@@ -314,9 +315,6 @@ public class MyMonitorService extends AccessibilityService {
         EditText etGoal=lockView.findViewById(R.id.et_work_goal);
         Button btnExit=lockView.findViewById(R.id.btn_exit);
 
-
-
-
         btnExit.setOnClickListener(v -> {
             String goal=etGoal.getText().toString().trim();
             if(!goal.isEmpty())
@@ -332,8 +330,6 @@ public class MyMonitorService extends AccessibilityService {
 
                 isInPunishmentMode=true;
                 Log.d("Monitor","进入1分钟自控监视间，目标："+goal);
-
-
                 performGlobalAction(GLOBAL_ACTION_HOME);//模拟Home键：返回主界面
 
                 Log.d("Monitor","用户目标已经锁定："+goal);
