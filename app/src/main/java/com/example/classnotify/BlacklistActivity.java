@@ -25,6 +25,7 @@ public class BlacklistActivity extends AppCompatActivity {
     private Set<String> currentBlacklist;
     private SearchView searchView;
     private ProgressBar progressBar;
+    private RecyclerView recyclerView; // 提到成员变量
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -33,9 +34,8 @@ public class BlacklistActivity extends AppCompatActivity {
         setContentView(R.layout.activity_blacklist);
 
         progressBar=findViewById(R.id.progress_loader);
-
         // 1. 获取 RecyclerView 实例
-        RecyclerView recyclerView=findViewById(R.id.rv_blacklist);
+        recyclerView=findViewById(R.id.rv_blacklist);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // 2. 读取磁盘数据
@@ -72,12 +72,11 @@ public class BlacklistActivity extends AppCompatActivity {
             }
         });
 
-
-        loadAppData(recyclerView);
     }
 
-    private void loadAppData(RecyclerView recyclerView)
+    private void loadAppData()
     {
+        if (progressBar.getVisibility() == View.VISIBLE) return;
         progressBar.setVisibility(View.VISIBLE);
         progressBar.setProgress(0);
 
@@ -88,10 +87,15 @@ public class BlacklistActivity extends AppCompatActivity {
 
             runOnUiThread(()->{
                 appList=data;
-                adapter=new AppAdapter(appList,currentBlacklist);
+                adapter = new AppAdapter(appList, currentBlacklist);
                 recyclerView.setAdapter(adapter);
                 progressBar.setVisibility(View.GONE);
+
+                if (appList.size() > 1) {
+                    Log.d("AppListSearch", "加载成功，数量：" + appList.size());
+                }
             });
+
 
         }).start();
     }
@@ -101,6 +105,7 @@ public class BlacklistActivity extends AppCompatActivity {
         List<AppInfo> res=new ArrayList<>();
         PackageManager pm=getPackageManager();
         List<PackageInfo> packs=pm.getInstalledPackages(0);
+        Log.d("AppListSearch", "查询到的应用总数: " + packs.size());
         int total=packs.size();
 
         for(int i=0;i<total;i++)
@@ -131,4 +136,13 @@ public class BlacklistActivity extends AppCompatActivity {
         void onProgressUpdate(int progress);
     }
 
+    @Override
+    protected void onResume(){
+        super.onResume();
+
+        if(appList==null||appList.size()<=1){
+            Log.d("AppListSearch", "onResume: 检测到列表未就绪或受限，尝试加载...");
+            loadAppData();
+        }
+    }
 }

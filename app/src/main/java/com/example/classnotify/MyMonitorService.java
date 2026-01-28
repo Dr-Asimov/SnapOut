@@ -67,7 +67,7 @@ public class MyMonitorService extends AccessibilityService {
             android.app.NotificationChannel channel=new android.app.NotificationChannel(
                     channelId,
                     "防沉迷",
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_HIGH
             );
             android.app.NotificationManager manager=getSystemService(android.app.NotificationManager.class);
             if(manager != null)
@@ -263,7 +263,7 @@ public class MyMonitorService extends AccessibilityService {
 
     private void sendRestTimeNotification()
     {
-        String channelId="rest_time_channel_v1";
+        String channelId="channel";
         NotificationManager manager=(NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         if(manager==null)return;
@@ -273,11 +273,11 @@ public class MyMonitorService extends AccessibilityService {
             NotificationChannel channel=new NotificationChannel(
                     channelId,
                     "休息时间提醒",
-                    NotificationManager.IMPORTANCE_LOW
+                    NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription("用于提醒用户休息和完成任务");
             channel.enableLights(true);
-            channel.enableVibration(false);
+            channel.enableVibration(true);
             manager.createNotificationChannel(channel);
         }
         NotificationCompat.Builder builder=new NotificationCompat.Builder(this,channelId)
@@ -285,9 +285,10 @@ public class MyMonitorService extends AccessibilityService {
                 .setContentText("咕咕咕！请完成你的任务！")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_REMINDER)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setDefaults(NotificationCompat.DEFAULT_ALL);;
 
+        Log.d("Monitor", "尝试发送通知：ID=102, Channel=" + channelId);
         manager.notify(102,builder.build());
 
     }
