@@ -2,22 +2,27 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#87CEFA"
     android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#F5F5F5"
+        android:background="#FFFACD"
         android:paddingLeft="16dp"
         android:paddingRight="16dp">
 
-        <Button
+        <ImageButton
             android:id="@+id/btn_teach_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:text="&lt;-"
-            android:background="?attr/selectableItemBackground" />
+            android:layout_marginLeft="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#000000" />
 
         <TextView
             android:layout_width="wrap_content"

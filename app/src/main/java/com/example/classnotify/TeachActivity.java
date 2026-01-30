@@ -3,11 +3,13 @@ package com.example.classnotify;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class TeachActivity extends AppCompatActivity {
 
+    ImageButton btnBack;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,7 +22,7 @@ public class TeachActivity extends AppCompatActivity {
         setContentView(R.layout.activity_teach);
 
         // 2. 初始化返回按钮
-        Button btnBack = findViewById(R.id.btn_teach_back);
+        btnBack= findViewById(R.id.btn_teach_back);
 
         // 3. 实现点击事件：点击 "<-" 直接关闭当前页面，回到上一层
         btnBack.setOnClickListener(new View.OnClickListener() {

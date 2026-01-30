@@ -294,12 +294,19 @@ public class MyMonitorService extends AccessibilityService {
     }
 
 
-    private void startCombineLock(){
-        if(lockView!=null) return;
+    private void startCombineLock() {
+        if (lockView != null) return;
 
         performGlobalAction(GLOBAL_ACTION_HOME);
-        windowManager=(WindowManager) getSystemService(WINDOW_SERVICE);
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
+        // 2. 延时渲染 UI（给系统动画留出时间）
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            executeRealRender();
+        }, 500); // 延时 500 毫秒
+    }
+
+    private void executeRealRender() {
         //初始参数：必须获得焦点以支持输入
         params=new WindowManager.LayoutParams(
                 LayoutParams.MATCH_PARENT,
@@ -330,8 +337,6 @@ public class MyMonitorService extends AccessibilityService {
 
                 isInPunishmentMode=true;
                 Log.d("Monitor","进入1分钟自控监视间，目标："+goal);
-                performGlobalAction(GLOBAL_ACTION_HOME);//模拟Home键：返回主界面
-
                 Log.d("Monitor","用户目标已经锁定："+goal);
 
                 if(liftPunishmentRunnable !=null) handler.removeCallbacks(liftPunishmentRunnable);

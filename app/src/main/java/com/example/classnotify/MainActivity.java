@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
@@ -45,6 +46,11 @@ public class MainActivity extends AppCompatActivity {
             Intent intent=new Intent(MainActivity.this,TeachActivity.class);
             startActivity(intent);
         });
+
+        // Java 代码
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(Color.BLACK);
+        }
 
     }
 

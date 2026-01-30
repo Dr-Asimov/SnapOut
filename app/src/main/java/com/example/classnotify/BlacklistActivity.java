@@ -2,10 +2,14 @@ package com.example.classnotify;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.FileUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
 import androidx.appcompat.widget.SearchView;
@@ -26,6 +30,7 @@ public class BlacklistActivity extends AppCompatActivity {
     private SearchView searchView;
     private ProgressBar progressBar;
     private RecyclerView recyclerView; // 提到成员变量
+    private ImageButton btnBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -33,10 +38,25 @@ public class BlacklistActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blacklist);
 
+
+        btnBack = findViewById(R.id.btn_back);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish(); // 销毁当前 Activity，返回上一个界面
+                }
+            });
+        }else {
+            // 如果这里还是 null，说明 XML 里的 ID 没有写对，或者 ID 不叫 btn_back
+            Log.e("Error", "找不到 ID 为 btn_back 的控件");
+        }
+
         progressBar=findViewById(R.id.progress_loader);
         // 1. 获取 RecyclerView 实例
         recyclerView=findViewById(R.id.rv_blacklist);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
 
         // 2. 读取磁盘数据
         SharedPreferences prefs=getSharedPreferences("MonitorPrefs",MODE_PRIVATE);
@@ -71,6 +91,12 @@ public class BlacklistActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        // Java 代码
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(Color.BLACK);
+        }
+
 
     }
 
