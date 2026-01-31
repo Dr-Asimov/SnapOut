@@ -60,6 +60,8 @@ public class MyMonitorService extends AccessibilityService {
     {
         super.onServiceConnected();
         Log.d("Monitor","服务已连接");
+        refreshBlacklist(); // 服务一启动，先从硬盘抄一遍名单
+        Log.d("Monitor", "服务启动，初始名单长度：" + dynamicBlacklist.size());
 
         String channelId="class_ambition_channel";
         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O)
@@ -96,11 +98,10 @@ public class MyMonitorService extends AccessibilityService {
             @Override
             public void run() {
                 if(dynamicBlacklist.contains(currentPackageName)){
+                    isSessionActive = false; // 【重要】计时结束，通行证立刻作废
                     Toast.makeText(getApplicationContext(),"使用时间超限，强制休息!",Toast.LENGTH_LONG).show();
                     //发送休息时间通知
                     sendRestTimeNotification();
-                    //核心动作：模拟点击Home键，实现“强制退出”视觉效果
-                    //performGlobalAction(GLOBAL_ACTION_HOME);
                     //进阶
                     startCombineLock();
                 }
@@ -114,69 +115,72 @@ public class MyMonitorService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event)
     {
 
-        if(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            SharedPreferences prefs = getSharedPreferences("MonitorPrefs", MODE_PRIVATE);
-            Set<String> savedSet = prefs.getStringSet("blacklist_pkgs", new HashSet<>());
+        if (event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
 
-            dynamicBlacklist.clear();
-            dynamicBlacklist.addAll(savedSet);
-            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                String newPackageName = event.getPackageName().toString();
+        //如果黑名单因为某些意外空了，刷新它
+        if (dynamicBlacklist.isEmpty()) {
+            refreshBlacklist();
+        }
 
-                if (newPackageName.equals(getPackageName()) ||
-                        newPackageName.equals("com.android.systemui") ||
-                        newPackageName.contains("inputmethod")) {
-                    return;
+        String newPackageName = (event.getPackageName() != null) ? event.getPackageName().toString() : "";
+        Log.d("MonitorCheck", "--- 收到新事件 ---");
+        Log.d("MonitorCheck", "当前检测到包名: [" + newPackageName + "]");
+        // 【第一步：排除干扰项】
+        if (newPackageName.isEmpty() ||
+                newPackageName.equals(getPackageName()) ||
+                newPackageName.equals("com.example.ambition") || // 显式排除你的包名
+                newPackageName.equals("android") ||                 // <--- 【必加】防止搜索框干扰
+                newPackageName.equals("com.android.systemui") ||    // <--- 【必加】防止下拉栏干扰
+                newPackageName.contains("inputmethod") ||
+                newPackageName.contains("baidu.input")) {
+            Log.d("MonitorCheck", "跳过处理：属于系统UI、输入法或应用自身");
+            return;
+        }
+        // 2、保安：在禁闭期&&点开黑名单，直接踢走，不走后面的查票流程
+        if(isInPunishmentMode&&dynamicBlacklist.contains(newPackageName))
+        {
+            Log.d("MonitorCheck", "【保安拦截】禁闭中，强制踢回桌面！");
+            performGlobalAction(GLOBAL_ACTION_HOME);
+            return;
+        }
+
+        // 3、检票员：
+        if (!newPackageName.equals(currentPackageName)) {
+            Log.d("MonitorCheck", "检测到应用切换: " + currentPackageName + " -> " + newPackageName);
+
+            // 先存一下旧包名，用来判断是不是“离场”
+            String oldPackageName = currentPackageName;
+            currentPackageName = newPackageName;
+
+            boolean inBlacklist = dynamicBlacklist.contains(newPackageName);
+
+            if (inBlacklist) {
+                //当前APP是黑名单应用
+                if (isSessionActive) {
+                    Log.d("MonitorCheck", "【检票放行】有票，随便玩");
+                } else {
+                    Log.d("MonitorCheck", "【检票拦截】没票，去选时间！");
+                    showTimeSelector();
+                }
+            } else {
+                // 切到了非黑名单应用
+                if (dynamicBlacklist.contains(oldPackageName)) {
+                    Log.d("MonitorCheck", "【检票收票】离开黑名单，注销通行证");
+                    isSessionActive = false;
+                    handler.removeCallbacks(forceExitRunnable); // 停止还没跑完的强制退出任务
                 }
 
-
-                //如果切换APP，先移除之前的计时器
-                if (!newPackageName.equals(currentPackageName)) {
-                    //用户切屏了
-                    handler.removeCallbacks(forceExitRunnable);
-
-                    if (isSessionActive && !dynamicBlacklist.contains(newPackageName)) {
-                        isSessionActive = false;
-                        Log.d("Monitor", "切出目标应用，计时结束");
-                    }
-
-                    if (timeSelectorView != null && windowManager != null) {
+                if (isUiShowing) {
+                    Log.d("MonitorCheck", "用户没选时间就跑了，关闭滚轮弹窗");
+                    if(timeSelectorView != null && windowManager != null) {
                         windowManager.removeView(timeSelectorView);
                         timeSelectorView = null;
                         isUiShowing = false;
                     }
-
-                    currentPackageName = newPackageName;
-                    Log.d("Monitor", "检测到当前应用：" + currentPackageName);
-
-                    //检查是否在黑名单中
-                    if (dynamicBlacklist.contains(currentPackageName)) {
-                        if (isInPunishmentMode) {
-                            Log.d("Monitor", "监视期内违规！强制退出");
-                            Toast.makeText(this, "请关注您的任务", Toast.LENGTH_LONG).show();
-                            //发送休息时间通知
-                            sendRestTimeNotification();
-                            performGlobalAction(GLOBAL_ACTION_HOME);
-                        } else {
-                            //isSessionActive存在的意义是什么
-                            if (isSessionActive) {
-                                Log.d("Monitor", "用户正在合法游戏时间内，无需操作");
-                            } else {
-                                Log.d("Monitor", "命中黑名单，弹出时间选择器...");
-                                showTimeSelector();
-                            }
-
-//                        //开始倒计时
-//                        handler.removeCallbacks(forceExitRunnable);
-//                        //在这里设定倒计时时间，然后开始delay
-//
-//                        handler.postDelayed(forceExitRunnable,TIME_LIMIT);
-                        }
-
-                    }
                 }
-
             }
+        } else {
+            Log.d("MonitorCheck", "包名没变，保持现状");
         }
     }
 
@@ -354,5 +358,13 @@ public class MyMonitorService extends AccessibilityService {
 
         windowManager.addView(lockView,params);
     }
+    //把读取硬盘的操作封装
+    private void refreshBlacklist() {
 
+        SharedPreferences prefs = getSharedPreferences("MonitorPrefs", MODE_PRIVATE);
+        Set<String> savedSet = prefs.getStringSet("blacklist_pkgs", new HashSet<>());
+        dynamicBlacklist.clear();
+        dynamicBlacklist.addAll(savedSet);
+        Log.d("Monitor", "已刷新黑名单，当前包含：" + dynamicBlacklist.toString());
+    }
 }
