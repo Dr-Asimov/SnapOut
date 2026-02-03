@@ -117,10 +117,8 @@ public class MyMonitorService extends AccessibilityService {
 
         if (event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
 
-        //如果黑名单因为某些意外空了，刷新它
-        if (dynamicBlacklist.isEmpty()) {
-            refreshBlacklist();
-        }
+        //每次检测应用切换时都刷新黑名单，确保使用最新数据
+        refreshBlacklist();
 
         String newPackageName = (event.getPackageName() != null) ? event.getPackageName().toString() : "";
         Log.d("MonitorCheck", "--- 收到新事件 ---");

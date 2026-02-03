@@ -73,18 +73,13 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder> impl
             if(isChecked) mBlacklist.add(app.packageName);
             else mBlacklist.remove(app.packageName);
 
-            v.getContext().getSharedPreferences("MonitorPrefs", Context.MODE_PRIVATE)
-                            .edit().putStringSet("blacklist_pkgs",mBlacklist)
-                            .apply();
+            // 保存到正确的SharedPreferences文件和键名
+            boolean success=v.getContext().getSharedPreferences("MonitorPrefs", Context.MODE_PRIVATE)
+                            .edit().putStringSet("blacklist_pkgs",new HashSet<>(mBlacklist))
+                            .commit();
 
             Log.d("AppAdapter", "直接点击开关 - " + app.appName + " 状态: " + isChecked);
-
             Log.d("AppDebug", "当前内存集合内容: " + mBlacklist.toString());
-            boolean success=v.getContext().getSharedPreferences("Monitor",Context.MODE_PRIVATE)
-                    .edit()
-                    .putStringSet("blacklsit_pkgs",new HashSet<>(mBlacklist))
-                    .commit();
-
             Log.d("AppDebug","硬盘写入结果："+success);
         });
 
